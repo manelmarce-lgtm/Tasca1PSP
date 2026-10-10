@@ -12,45 +12,61 @@ Imprimeix per pantalla l'estat final de l'execució segons el codi retornat.
 */
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 public class AnalitzadorPrincipal {
     public static void main(String[] args) throws IOException {
+
+        File fitxerErrors = new File("errors_filtre.log");
+        ProcessBuilder pb = new ProcessBuilder("java", "FiltreLog", "ERROR");
+        ProcessBuilder pb2 = new ProcessBuilder("java", "FiltreLog", "WARNING");
+
+        pb.redirectError(fitxerErrors);
+        pb2.redirectError(fitxerErrors);
+
         try {
-            ProcessBuilder pb = new ProcessBuilder("java", "FiltreLog");
-            File fitxerErrors = new File("errors_filtre.log");
-            pb.redirectError(fitxerErrors);
             Process p = pb.start();
-
-            OutputStream out = p.getOutputStream();
-            String textProva = " Error, hi ha hagut un error a la linea 54 ";
-            out.write(textProva.getBytes());
-            out.flush();
-            out.close();
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String resultat = in.readLine();
-            in.close();
-
-            System.out.println("El fill ha comptat: " + resultat + " errors.");
-            p.waitFor();
-
-            int codiSortida = p.exitValue();
-            if (codiSortida == 0) {
-                System.out.println("El procés fill ha finalitzat correctament");
-            } else{
-                System.err.print("El proces fill ha finalitzat amb errors: " + codiSortida
-                        + "Mira el fitxer errors_filtre.log pe més informacio");
+            Process p2 = pb2.start();
+            String textProva = " [ERROR], hi ha hagut un [ERROR] a la linea 54\n"
+                    + "[WARNING] S'esta realentizant el procés.";
+            try (BufferedWriter outProces1 = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()))) {
+                outProces1.write(textProva);
+                outProces1.flush();
             }
+
+            try (BufferedWriter outProces2 = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()))) {
+                outProces2.write(textProva);
+                outProces2.flush();
+            }
+
+            String resultatp1 = null;
+            try (BufferedReader inpProces1 = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                resultatp1 = inpProces1.readLine();
+            }
+            String resultatp2 = null;
+            try (BufferedReader inpProces2 = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                resultatp2 = inpProces2.readLine();
+            }
+            int sortidaP1 = p.waitFor();
+            int sortidaP2 = p2.waitFor();
+
+            int codiSortida = (sortidaP1 == 0 && sortidaP2 == 0) ? 0 : 1;
+            int contadorErrors = (resultatp1 != null && !resultatp1.isEmpty()) ? Integer.parseInt(resultatp1.trim())
+                    : 0;
+            int contadorWarnings = (resultatp2 != null && !resultatp2.isEmpty()) ? Integer.parseInt(resultatp2.trim())
+                    : 0;
+            System.out.println("RESULTAT: ERRORS=" + contadorErrors + " | WARNINGS=" + contadorWarnings
+                    + " | EXIT_CODE=" + codiSortida);
         } catch (IOException e) {
-            System.err.println("Error d' in/out: " + e.getMessage());
+            System.err.println("Error E/S: " + e.getMessage());
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.err.println("Procés interromput: " + e.getMessage());
+            Thread.currentThread().interrupt();
         }
-
     }
-
 }

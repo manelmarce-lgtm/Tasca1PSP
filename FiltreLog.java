@@ -3,42 +3,44 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class FiltreLog {
-    /*
-     * Rep un text línia per línia a través de la seva entrada
-     * estàndard (System.in).
-     * Per defecte, compta quantes vegades apareix la paraula clau ERROR.
-     * Envia el resultat numèric final com una única línia a la seva sortida
-     * estàndard (System.out).
-     * Validació i Codi de Sortida en el Fill:
-     * Si FiltreLog rep un text buit o nul per System.in,
-     * ha d'emetre un missatge d'error per System.err ("Error: Text buit")
-     * i finalitzar immediatament amb System.exit(1). Si tot és correcte, finalitza
-     * amb System.exit(0).
-     * 
-     */
-    public static void main(String[] args) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String linia;
-        String cercar = "ERROR";
-        int contadorTotal = 0;
-        boolean teContingut = false;
 
-        while ((linia = reader.readLine()) != null) {
-            teContingut = true;
-            if (!linia.isEmpty()) {
-                // Comptem les aparicions a la línia actual i les sumem al total
-                int coincidenciesLinia = linia.split("(?i)" + cercar, -1).length - 1;
-                contadorTotal += coincidenciesLinia;
-            }
+    public static void main(String[] args) {
+        String cercar = "ERROR";
+
+        // Si es passa un argument per línia de comandes, s'utilitza com a paraula clau
+        if (args.length > 0) {
+            cercar = args[0];
         }
 
+        int contador = 0;
+        boolean teContingut = false;
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            String linia;
+
+            while ((linia = reader.readLine()) != null) {
+                teContingut = true;
+
+                // Comptar quantes vegades apareix la paraula clau exacta a la línia
+                int index = 0;
+                while ((index = linia.indexOf(cercar, index)) != -1) {
+                    contador++;
+                    index += cercar.length();
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage());
+            System.exit(1);
+        }
+
+        // Si System.in no ha passat cap línia (text buit o nul)
         if (!teContingut) {
             System.err.println("Error: Text buit");
             System.exit(1);
         }
 
-        // Escriure el resultat final a la sortida estàndard
-        System.out.println(contadorTotal);
+        // Mostrar el resultat final i sortir amb codi 0
+        System.out.println(contador);
         System.exit(0);
     }
 }
