@@ -24,7 +24,7 @@ public class AvaluadorPracticaTest {
     void testNivell1_FiltreLogIsolated() throws Exception {
         String logExemple = "2026-09-30 INFO Inici\n2026-09-30 ERROR Fallada 1\n2026-09-30 ERROR Fallada 2\n";
         String javaClasspath = System.getProperty("java.class.path");
-        
+
         ProcessBuilder pb = new ProcessBuilder("java", "-cp", javaClasspath, "FiltreLog", "ERROR");
         Process p = pb.start();
 
@@ -39,7 +39,7 @@ public class AvaluadorPracticaTest {
             assertEquals("2", line.trim(), "El comptatge no és correcte.");
         }
         assertEquals(0, p.waitFor(), "El procés fill hauria de finalitzar amb exitCode=0.");
-        
+
         notaBase += 2.0;
     }
 
@@ -48,7 +48,8 @@ public class AvaluadorPracticaTest {
     @DisplayName("Nivell 2: Gestió de text buit i fitxer d'errors [2.0 pts]")
     void testNivell2_GestioErrors() throws Exception {
         File logErrors = new File("errors_filtre.log");
-        if (logErrors.exists()) logErrors.delete();
+        if (logErrors.exists())
+            logErrors.delete();
 
         String javaClasspath = System.getProperty("java.class.path");
         ProcessBuilder pb = new ProcessBuilder("java", "-cp", javaClasspath, "FiltreLog", "ERROR");
@@ -83,7 +84,7 @@ public class AvaluadorPracticaTest {
                 }
             }
         }
-        
+
         p.waitFor();
         assertFalse(ultimaLinia.isEmpty(), "No s'ha trobat la línia que comença per 'RESULTAT:'.");
         assertTrue(ultimaLinia.contains("ERRORS=3"), "El comptatge d'ERRORS no és correcte.");

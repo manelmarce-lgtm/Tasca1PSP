@@ -22,8 +22,10 @@ public class AnalitzadorPrincipal {
     public static void main(String[] args) throws IOException {
 
         File fitxerErrors = new File("errors_filtre.log");
-        ProcessBuilder pb = new ProcessBuilder("java", "FiltreLog", "ERROR");
-        ProcessBuilder pb2 = new ProcessBuilder("java", "FiltreLog", "WARNING");
+        String javaClasspath = System.getProperty("java.class.path");
+
+        ProcessBuilder pb = new ProcessBuilder("java", "-cp", javaClasspath, "FiltreLog", "ERROR");
+        ProcessBuilder pb2 = new ProcessBuilder("java", "-cp", javaClasspath, "FiltreLog", "WARNING");
 
         pb.redirectError(fitxerErrors);
         pb2.redirectError(fitxerErrors);
@@ -31,24 +33,34 @@ public class AnalitzadorPrincipal {
         try {
             Process p = pb.start();
             Process p2 = pb2.start();
-            String textProva = " [ERROR], hi ha hagut un [ERROR] a la linea 54\n"
-                    + "[WARNING] S'esta realentizant el procés.";
+            String textProva = "[ERROR] Primer error\n"
+                    + "[ERROR] Segon error\n"
+                    + "[ERROR] Tercer error\n"
+                    + "[WARNING] Primer warning\n"
+                    + "[WARNING] Segon warning\n"
+                    + "[WARNING] Tercer warning\n";
+
+            // 1. Enviament al Procés 1 (p)
             try (BufferedWriter outProces1 = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()))) {
                 outProces1.write(textProva);
                 outProces1.flush();
             }
 
-            try (BufferedWriter outProces2 = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()))) {
+            // 2. Enviament al Procés 2 (p2)
+            try (BufferedWriter outProces2 = new BufferedWriter(new OutputStreamWriter(p2.getOutputStream()))) {
                 outProces2.write(textProva);
                 outProces2.flush();
             }
 
+            // 3. Lectura del Procés 1 (p)
             String resultatp1 = null;
             try (BufferedReader inpProces1 = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
                 resultatp1 = inpProces1.readLine();
             }
+
+            // 4. Lectura del Procés 2 (p2)
             String resultatp2 = null;
-            try (BufferedReader inpProces2 = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            try (BufferedReader inpProces2 = new BufferedReader(new InputStreamReader(p2.getInputStream()))) {
                 resultatp2 = inpProces2.readLine();
             }
             int sortidaP1 = p.waitFor();
@@ -59,7 +71,7 @@ public class AnalitzadorPrincipal {
                     : 0;
             int contadorWarnings = (resultatp2 != null && !resultatp2.isEmpty()) ? Integer.parseInt(resultatp2.trim())
                     : 0;
-            System.out.println("RESULTAT: " + "ERRORS=" + contadorErrors + " | WARNINGS=" + contadorWarnings
+            System.out.println("RESULTAT:" + "ERRORS=" + contadorErrors + " | WARNINGS=" + contadorWarnings
                     + " | EXIT_CODE=" + codiSortida);
         } catch (IOException e) {
             System.err.println("Error E/S: " + e.getMessage());
