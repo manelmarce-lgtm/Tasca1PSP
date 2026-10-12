@@ -16,7 +16,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
 public class AnalitzadorPrincipal {
@@ -60,7 +59,7 @@ public class AnalitzadorPrincipal {
                     : 0;
             int contadorWarnings = (resultatp2 != null && !resultatp2.isEmpty()) ? Integer.parseInt(resultatp2.trim())
                     : 0;
-            System.out.println("RESULTAT: ERRORS=" + contadorErrors + " | WARNINGS=" + contadorWarnings
+            System.out.println("RESULTAT: " + "ERRORS=" + contadorErrors + " | WARNINGS=" + contadorWarnings
                     + " | EXIT_CODE=" + codiSortida);
         } catch (IOException e) {
             System.err.println("Error E/S: " + e.getMessage());
